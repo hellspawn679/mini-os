@@ -1,5 +1,5 @@
 with import <nixpkgs> {};
 
 mkShell{
-    buildInputs=[gnumake];
+    buildInputs=[grub2 xorriso];
 }
