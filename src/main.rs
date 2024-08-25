@@ -5,6 +5,16 @@
 use core::arch::global_asm;
 use core::panic::PanicInfo;
 
+
+#[repr(C,packed)] // please follow some rules 
+struct MultibootInfo {
+    flag :u32,
+    mem_lower :u32,
+    mem_upper:u32,
+    //other stuff 
+}
+
+
 // Include boot.s which defines _start as inline assembly in main. This allows us to do more fine
 // grained setup than if we used a naked _start function in rust. Theoretically we could use a
 // naked function + some inline asm, but this seems much more straight forward.
@@ -20,9 +30,9 @@ pub unsafe extern "C" fn memset(s: *mut u8, c: i32, n: usize) -> *mut u8 {
 }
 
 #[no_mangle]
-pub extern "C" fn kernel_main() -> ! {
+pub extern "C" fn kernel_main(arg:i32,arg2:i32) -> ! {
     let mut terminal_writer = TerminalWriter::new();
-    terminal_writer.write(b"We did it, a rust kernel!");
+    terminal_writer.putint(arg);
     loop {}
 }
 
@@ -106,7 +116,23 @@ impl TerminalWriter {
             *self.terminal_buffer.add(index) = vga_entry(c, color);
         }
     }
-
+    fn putint(&mut self, mut c: i32) {
+        if c<0 {
+            self.putchar(b'-');
+            c=-c;
+        }
+        
+        let mut num_digits=1;
+        loop{
+         if c/10_i32.pow(num_digits)==0{
+            break;  }
+         
+        }
+        for digit in (1..=num_digits).rev() {
+            let c=(c /10_i32.pow(digit-1))%10;
+            self.putchar((c+0x30)as u8);
+        }
+    }
     fn putchar(&mut self, c: u8) {
         self.putentryat(
             c,
